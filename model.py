@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -12,6 +13,22 @@ from utils.base import MaskLoadParams, prepare_experiment
 from utils.callbacks import TestCallback
 from utils.generators import AutoBalancedPatchGenerator, SimpleBatchGenerator
 from utils.patches import combine_from_patches, split_into_patches
+
+
+def set_gpu(gpu_index):
+	import tensorflow as tf
+	physical_devices  = tf.config.experimental.list_physical_devices('GPU')
+	print(f'Available GPUs: {len(physical_devices )}')
+	if physical_devices:
+		print(f'Choosing GPU #{gpu_index}')
+		try:
+			tf.config.experimental.set_visible_devices([physical_devices[gpu_index]], 'GPU')
+			logical_devices = tf.config.list_logical_devices('GPU')
+			assert len(logical_devices) == 1
+			print(f'Success. Now visible GPUs: {len(logical_devices)}')
+		except RuntimeError as e:
+			print('Something went wrong!')
+			print(e)
 
 
 class GeoModel:
@@ -98,6 +115,11 @@ class GeoModel:
 
 missed_classes = (3, 5, 7, 9, 10, 12)
 
+assert len(sys.argv) > 1 and sys.argv[1].isnumeric()
+gpu_index = int(sys.argv[1])
+assert gpu_index >= 0
+set_gpu(gpu_index)
+
 n_classes = len(config.class_names)
 present_classes = tuple(i for i in range(len(config.class_names)) if i not in missed_classes)
 n_classes_sq = len(present_classes)
@@ -117,11 +139,13 @@ mask_load_p = MaskLoadParams(None, squeeze=True, squeeze_mappings=squeeze_code_m
 
 exp_path = prepare_experiment(Path('output'))
 
+data_path = '/home/d.sorokin/dev/geology/input/'
+
 
 pg = AutoBalancedPatchGenerator(
-    Path('c:\\dev\\#data\\LumenStone\\S1\\v1\\imgs\\train\\'),
-    Path('c:\\dev\\#data\\LumenStone\\S1\\v1\\masks\\train\\'),
-    Path('.\\cache\\maps\\'),
+    Path(data_path + 'dataset/S1_v1/imgs/train/'),
+    Path(data_path + 'dataset/S1_v1/masks/train/'),
+    Path(data_path + 'cache/maps/'),
     patch_s, n_classes=n_classes, distancing=0.5, mixin_random_every=5)
 
 
@@ -144,8 +168,8 @@ model.model.compile(
 model.train(
     bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
     # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=50, val_steps=5,
-    test_img_folder=Path('c:\\dev\\#data\\LumenStone\\S1\\v1\\imgs\\test\\'),
-    test_mask_folder=Path('c:\\dev\\#data\\LumenStone\\S1\\v1\\masks\\test\\'),
+    test_img_folder=Path(data_path + '/dataset/S1_v1/imgs/test/'),
+    test_mask_folder=Path(data_path + '/dataset/S1_v1/masks/test/'),
     test_output=exp_path, codes_to_lbls=codes_to_lbls, lbls_to_colors=config.lbls_to_colors,
     mask_load_p=mask_load_p
 )
