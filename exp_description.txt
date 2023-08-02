@@ -1,0 +1,8 @@
+exp_1 - initial model trained on S1_v1
+exp_5 - initial model trained on S3_v1 with corrected missed classes
+
+exp_6 - initial model trained on S3_v1 with n_classes_sq in AutoBalancedPatchGenerator and cleared maps cache
+
+
+
+

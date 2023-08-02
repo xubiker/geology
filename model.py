@@ -113,7 +113,8 @@ class GeoModel:
             ],
         )
 
-missed_classes = (3, 5, 7, 9, 10, 12)
+# missed_classes = (3, 5, 7, 9, 10, 12) # for S1_v1
+missed_classes = (5, 7) # for S3_v1
 
 assert len(sys.argv) > 1 and sys.argv[1].isnumeric()
 gpu_index = int(sys.argv[1])
@@ -141,12 +142,15 @@ exp_path = prepare_experiment(Path('output'))
 
 data_path = '/home/d.sorokin/dev/geology/input/'
 
+# dataset_name = 'S1_v2'
+dataset_name = 'S1_v1_and_S3_v1'
+
 
 pg = AutoBalancedPatchGenerator(
-    Path(data_path + 'dataset/S1_v1/imgs/train/'),
-    Path(data_path + 'dataset/S1_v1/masks/train/'),
+    Path(data_path + 'dataset/' + dataset_name + '/imgs/train/'),
+    Path(data_path + 'dataset/' + dataset_name + '/masks/train/'),
     Path(data_path + 'cache/maps/'),
-    patch_s, n_classes=n_classes, distancing=0.5, mixin_random_every=5)
+    patch_s, n_classes=n_classes_sq, distancing=0.5, mixin_random_every=5)
 
 
 # # loss_weights = recalc_loss_weights_2(pg.get_class_weights(remove_missed_classes=True))
@@ -168,8 +172,8 @@ model.model.compile(
 model.train(
     bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
     # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=50, val_steps=5,
-    test_img_folder=Path(data_path + '/dataset/S1_v1/imgs/test/'),
-    test_mask_folder=Path(data_path + '/dataset/S1_v1/masks/test/'),
+    test_img_folder=Path(data_path + '/dataset/' + dataset_name + '/imgs/test/'),
+    test_mask_folder=Path(data_path + '/dataset/' + dataset_name + '/masks/test/'),
     test_output=exp_path, codes_to_lbls=codes_to_lbls, lbls_to_colors=config.lbls_to_colors,
     mask_load_p=mask_load_p
 )
