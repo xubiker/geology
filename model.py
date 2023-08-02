@@ -10,10 +10,9 @@ import config
 from metrics import iou_tf
 from unet import res_unet, weightedLoss
 from utils.base import MaskLoadParams, prepare_experiment
-from utils.callbacks import TestCallback
-from utils.generators import AutoBalancedPatchGenerator, SimpleBatchGenerator
+from utils.callbacks import TestCallback, TestCallbackPolarized
+from utils.generators import AutoBalancedPatchGenerator, SimpleBatchGenerator, AutoBalancedPatchGeneratorPolarized
 from utils.patches import combine_from_patches, split_into_patches
-
 
 def set_gpu(gpu_index):
 	import tensorflow as tf
@@ -48,6 +47,7 @@ class GeoModel:
     def initialize(self, n_filters, n_layers):
         self.model = res_unet(
             (None, None, 3),
+            # (None, None, 3 * 25),
             n_classes=self.n_classes,
             BN=True,
             filters=n_filters,
@@ -84,12 +84,12 @@ class GeoModel:
 
     def train(
         self, train_gen, val_gen, n_steps, epochs, val_steps,
-        test_img_folder: Path, test_mask_folder: Path, test_output: Path,
+        test_img_folder: Path, test_mask_folder: Path, test_img_folder_polarized: Path, test_mask_folder_polarized: Path, test_output: Path,
         codes_to_lbls, lbls_to_colors, mask_load_p: MaskLoadParams
     ):
 
-        callback_test = TestCallback(
-            test_img_folder, test_mask_folder, lambda img: self.predict_image(img),
+        callback_test = TestCallbackPolarized(
+            test_img_folder, test_mask_folder, test_img_folder_polarized, test_mask_folder_polarized, lambda img: self.predict_image(img),
             test_output, codes_to_lbls, lbls_to_colors, self.offset, mask_load_p
         )
         
@@ -113,20 +113,7 @@ class GeoModel:
             ],
         )
 
-# missed_classes = (3, 5, 7, 9, 10, 12) # for S1_v1
-missed_classes = (5, 7) # for S3_v1
-
-assert len(sys.argv) > 1 and sys.argv[1].isnumeric()
-gpu_index = int(sys.argv[1])
-assert gpu_index >= 0
-set_gpu(gpu_index)
-
 n_classes = len(config.class_names)
-present_classes = tuple(i for i in range(len(config.class_names)) if i not in missed_classes)
-n_classes_sq = len(present_classes)
-
-squeeze_code_mappings = {code: i for i, code in enumerate(present_classes)}
-codes_to_lbls = {i: config.class_names[code] for i, code in enumerate(present_classes)}
 
 patch_s = 384
 batch_s = 16
@@ -135,25 +122,36 @@ n_filters = 16
 LR = 0.001
 patch_overlay = 0.5
 
+assert len(sys.argv) > 1 and sys.argv[1].isnumeric()
+gpu_index = int(sys.argv[1])
+assert gpu_index >= 0
+set_gpu(gpu_index)
 
-mask_load_p = MaskLoadParams(None, squeeze=True, squeeze_mappings=squeeze_code_mappings)
 
 exp_path = prepare_experiment(Path('output'))
 
-data_path = '/home/d.sorokin/dev/geology/input/'
-
-# dataset_name = 'S1_v2'
-dataset_name = 'S1_v1_and_S3_v1'
+data_path = '/home/d.razzhivina/geology-new/input/'
 
 
-pg = AutoBalancedPatchGenerator(
-    Path(data_path + 'dataset/' + dataset_name + '/imgs/train/'),
-    Path(data_path + 'dataset/' + dataset_name + '/masks/train/'),
+pg = AutoBalancedPatchGeneratorPolarized(
+    Path(data_path + 'dataset/S1_v2_new/imgs/train/'),
+    Path(data_path + 'dataset/S1_v2_new/masks/train/'),
     Path(data_path + 'cache/maps/'),
-    patch_s, n_classes=n_classes_sq, distancing=0.5, mixin_random_every=5)
+    Path(data_path + 'reg_results/imgs'),
+    Path(data_path + 'reg_results/valid_zones'),
+    patch_s, n_classes=n_classes, distancing=0.5, mixin_random_every=5)
 
+missed_classes = pg.get_missed_classes()
 
-# # loss_weights = recalc_loss_weights_2(pg.get_class_weights(remove_missed_classes=True))
+present_classes = tuple(i for i in range(len(config.class_names)) if i not in missed_classes)
+n_classes_sq = len(present_classes)
+
+squeeze_code_mappings = {code: i for i, code in enumerate(present_classes)}
+codes_to_lbls = {i: config.class_names[code] for i, code in enumerate(present_classes)}
+
+mask_load_p = MaskLoadParams(None, squeeze=True, squeeze_mappings=squeeze_code_mappings)
+
+# loss_weights = recalc_loss_weights_2(pg.get_class_weights(remove_missed_classes=True))
 
 bg = SimpleBatchGenerator(pg, batch_s, mask_load_p, augment=True)
 
@@ -171,9 +169,11 @@ model.model.compile(
 
 model.train(
     bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
-    # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=50, val_steps=5,
-    test_img_folder=Path(data_path + '/dataset/' + dataset_name + '/imgs/test/'),
-    test_mask_folder=Path(data_path + '/dataset/' + dataset_name + '/masks/test/'),
+    # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=5, val_steps=5,
+    test_img_folder=Path(data_path + '/dataset/S1_v2_base/imgs/test/'),
+    test_mask_folder=Path(data_path + '/dataset/S1_v2_base/masks/test/'),
+    test_img_folder_polarized=Path(data_path + '/dataset/S1_v2_polarized/imgs/test/'),
+    test_mask_folder_polarized=Path(data_path + '/dataset/S1_v2_polarized/masks/test/'),
     test_output=exp_path, codes_to_lbls=codes_to_lbls, lbls_to_colors=config.lbls_to_colors,
     mask_load_p=mask_load_p
 )

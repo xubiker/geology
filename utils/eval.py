@@ -203,3 +203,123 @@ class Tester:
 
     def plot_LR(self, lrs):
         self._plot_single_class_metric('LR', lrs)
+
+
+class TesterPolarized:
+    
+    def __init__(self, evaluator, evaluator_polarized, out_path: Path, codes_to_lbls, lbls_to_colors, mask_load_p: MaskLoadParams):
+        self.evaluator = evaluator
+        self.evaluator_polarized = evaluator_polarized
+        self.do_visualization = True
+        self.out_path = out_path
+        self.lbls_to_colors = lbls_to_colors
+        self.codes_to_colors = {code: lbls_to_colors[lbl] for code, lbl in codes_to_lbls.items()}
+        self.mask_load_p = mask_load_p
+
+    def _load_test_pair(self, img_path: Path, mask_path: Path):
+        img = np.array(Image.open(img_path)).astype(np.float32) / 256
+        mask = np.array(Image.open(mask_path))
+        mask = prepocess_mask(mask, self.mask_load_p)
+        return img, mask
+
+    def _visualize(self, img, gt, pred, folder: Path, image_idx):
+        if self.do_visualization and img is not None:
+            img = (img * 255).astype(np.uint8)
+            mask = np.argmax(gt, axis=-1).astype(np.uint8)
+            pred = np.argmax(pred, axis=-1).astype(np.uint8)
+            img_name = f'img_{image_idx}'
+            vis_segmentation(img, mask, pred, self.evaluator.offset, self.codes_to_colors, folder, img_name)
+
+    def test_on_set(self, imgs_folder: Path, masks_folder: Path, imgs_folder_polarized: Path, masks_folder_polarized: Path, predict_func, description: str) -> EvaluationResult:
+        out_folder = (self.out_path / description)
+        out_folder.mkdir(exist_ok=True, parents=True)
+        log = open(self.out_path / 'metrics.txt', "a+")
+        log_detailed = open(self.out_path / 'metrics_detailed.txt', "a+")
+        log_polarized = open(self.out_path / 'metrics_polarized.txt', "a+")
+        log_detailed_polarized = open(self.out_path / 'metrics_detailed_polarized.txt', "a+")
+        img_paths = sorted(list(imgs_folder.iterdir()))
+        mask_paths = [masks_folder / (img_path.stem + '.png') for img_path in img_paths]
+        n = len(img_paths)
+        for i in tqdm(range(n), 'testing'):
+            img, mask = self._load_test_pair(img_paths[i], mask_paths[i])
+            pred = predict_func(img)
+            eval_res = self.evaluator.evaluate(pred, mask)
+            eval_res_str = eval_res.to_str(description=f'{description}, image {i + 1}')
+            log_detailed.write(eval_res_str + '\n')
+            self._visualize(img, mask, pred, out_folder, i + 1)
+        img_paths_polarized = sorted(list(imgs_folder_polarized.iterdir()))
+        mask_paths_polarized = [masks_folder_polarized / (img_path.stem + '.png') for img_path in img_paths_polarized]
+        n_polarized = len(img_paths_polarized)
+        for i in tqdm(range(n_polarized), 'testing_polarized'):
+            img, mask = self._load_test_pair(img_paths_polarized[i], mask_paths_polarized[i])
+            pred = predict_func(img)
+            eval_res = self.evaluator.evaluate(pred, mask)
+            eval_res_polarized = self.evaluator_polarized.evaluate(pred, mask)
+            eval_res_str = eval_res.to_str(description=f'{description}, image {n + i + 1}')
+            eval_res_str_polarized = eval_res_polarized.to_str(description=f'{description}, image {i + 1}')
+            log_detailed.write(eval_res_str + '\n')
+            log_detailed_polarized.write(eval_res_str_polarized + '\n')
+            self._visualize(img, mask, pred, out_folder, n + i + 1)
+        total_eval_res = self.evaluator.flush()
+        total_eval_res_polarized = self.evaluator_polarized.flush()
+        gc.collect()
+        self._redraw_metric_plots()
+        total_eval_res_str = total_eval_res.to_str(description=f'{description}, total')
+        print(total_eval_res_str)
+        total_eval_res_str_polarized = total_eval_res_polarized.to_str(description=f'{description}, total polarized')
+        log_detailed.write(total_eval_res_str + '\n')
+        log.write(total_eval_res_str + '\n')
+        log_detailed_polarized.write(total_eval_res_str_polarized + '\n')
+        log_polarized.write(total_eval_res_str_polarized + '\n')
+
+    def _plot_single_class_metric(self, metric_name, values, polarized = False):
+        epochs = len(values)
+        fig = plt.figure(figsize=(12,6))
+        # ax = plt.axes()
+        # ax.set_facecolor('white')
+        x = [x+1 for x in range(epochs)]
+        y = [values[i] for i in range(epochs)]
+        plt.plot(x, y)
+        # plt.suptitle(f'{metric_name} over epochs', fontsize=20)
+        plt.ylabel(f'{metric_name}', fontsize=20)
+        plt.xlabel('epoch', fontsize=20)
+        if polarized == True:
+            fig.savefig(self.out_path / f'{metric_name}_polarized.png')
+        else:
+            fig.savefig(self.out_path / f'{metric_name}.png')
+
+    def _plot_multi_class_metric(self, metric_name, data: Dict[str, Iterable[float]], polarized = False):
+        epochs = len(list(data.values())[0])
+        fig = plt.figure(figsize=(12,6))
+        # ax = plt.axes()
+        # ax.set_facecolor('white')
+        for cl, vals in data.items():
+            x = [x+1 for x in range(epochs)]
+            y = [vals[i] for i in range(epochs)]
+            plt.plot(x, y, color=self.lbls_to_colors[cl])
+        # plt.suptitle(f'{metric_name} per class over epochs', fontsize=20)
+        plt.ylabel(f'{metric_name}', fontsize=20)
+        plt.xlabel('epoch', fontsize=20)
+        plt.legend([cl_str for cl_str in data], loc='center right', fontsize=15)
+        if polarized == True:
+            fig.savefig(self.out_path / f'{metric_name}__per_class_polarized.png')
+        else:
+            fig.savefig(self.out_path / f'{metric_name}_per_class.png')
+
+    def _redraw_metric_plots(self):
+        single_class_plot_data, multi_class_plot_data = self.evaluator.get_plot_data()
+
+        for metric, data in single_class_plot_data:
+            self._plot_single_class_metric(metric, data)
+        for metric, data in multi_class_plot_data:
+            self._plot_multi_class_metric(metric, data)
+
+        single_class_plot_data, multi_class_plot_data = self.evaluator_polarized.get_plot_data()
+        
+        for metric, data in single_class_plot_data:
+            self._plot_single_class_metric(metric, data, polarized = True)
+        for metric, data in multi_class_plot_data:
+            self._plot_multi_class_metric(metric, data, polarized = True)
+
+    def plot_LR(self, lrs):
+        self._plot_single_class_metric('LR', lrs)
