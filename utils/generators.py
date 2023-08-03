@@ -597,6 +597,7 @@ class AutoBalancedPatchGeneratorPolarized:
         t = time.perf_counter()
         img_idx = np.random.choice(self.n_imgs, 1, p=self.image_weights[cl])[0]
         img = self.imgs[img_idx]
+        # print(f'img_idx {img_idx}, cl {cl}')
         prob_map = self.prob_maps[img_idx][cl] 
         if img_idx > self.n_imgs - self.n_polarized - 1:
             add_img = self.add_imgs[img_idx + self.n_polarized - self.n_imgs]
@@ -605,8 +606,8 @@ class AutoBalancedPatchGeneratorPolarized:
             prob_map = prob_map / prob_map.sum()
         else:
             add_img = self.add_imgs[-1]
-        # result_imgs = np.concatenate((img, *add_img), axis = 2)
-        result_imgs = img
+        result_imgs = np.concatenate((img, *add_img), axis = 2)
+        # result_imgs = img
         
         self._t_img_select += time.perf_counter() - t
         # --- extract patch ---
@@ -624,7 +625,8 @@ class AutoBalancedPatchGeneratorPolarized:
             y = min(img.shape[0] - self.patch_s, y)
             x = min(img.shape[1] - self.patch_s, x)
         
-        patch_img = result_imgs[y : y + self.patch_s, x : x + self.patch_s]
+        # patch_img = result_imgs[y : y + self.patch_s, x : x + self.patch_s]
+        patch_img = result_imgs[y : y + self.patch_s, x : x + self.patch_s, :]
         patch_mask = self.masks[img_idx][y : y + self.patch_s, x : x + self.patch_s]
         self._t_patch_extract += time.perf_counter() - t
         # --- update accumulated pixels ---
@@ -638,11 +640,12 @@ class AutoBalancedPatchGeneratorPolarized:
         img = self.imgs[img_idx]
         mask = self.masks[img_idx]
         add_img = self.add_imgs[-1]
-        # result_imgs = np.concatenate((img, *add_img), axis = 2)
-        result_imgs = img
+        result_imgs = np.concatenate((img, *add_img), axis = 2)
+        # result_imgs = img
         y = np.random.randint(img.shape[0] - self.patch_s)
         x = np.random.randint(img.shape[1] - self.patch_s)
         patch_img = result_imgs[y : y + self.patch_s, x : x + self.patch_s]
+        patch_img = result_imgs[y : y + self.patch_s, x : x + self.patch_s, :]
         patch_mask = mask[y : y + self.patch_s, x : x + self.patch_s]
         if update_accumulators:
             self._update_accumulators(img_idx, y, x, patch_mask)

@@ -242,7 +242,11 @@ class TesterPolarized:
         n = len(img_paths)
         for i in tqdm(range(n), 'testing'):
             img, mask = self._load_test_pair(img_paths[i], mask_paths[i])
-            pred = predict_func(img)
+            
+            img_pol = None
+            # TODO: figure out how to work with polarized
+
+            pred = predict_func(img, img_pol)
             eval_res = self.evaluator.evaluate(pred, mask)
             eval_res_str = eval_res.to_str(description=f'{description}, image {i + 1}')
             log_detailed.write(eval_res_str + '\n')
@@ -252,7 +256,11 @@ class TesterPolarized:
         n_polarized = len(img_paths_polarized)
         for i in tqdm(range(n_polarized), 'testing_polarized'):
             img, mask = self._load_test_pair(img_paths_polarized[i], mask_paths_polarized[i])
-            pred = predict_func(img)
+
+            img_pol = None
+            # TODO: figure out how to work with polarized
+
+            pred = predict_func(img, img_pol)
             eval_res = self.evaluator.evaluate(pred, mask)
             eval_res_polarized = self.evaluator_polarized.evaluate(pred, mask)
             eval_res_str = eval_res.to_str(description=f'{description}, image {n + i + 1}')
