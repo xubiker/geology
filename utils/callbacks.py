@@ -25,7 +25,7 @@ class TestCallback(Callback):
 
 class TestCallbackPolarized(Callback):
     def __init__(self, img_folder: Path, mask_folder: Path, img_folder_polarized: Path, mask_folder_polarized: Path, predict_func, output_path: Path,
-                 codes_to_lbls, lbls_to_colors, offset, mask_load_p: MaskLoadParams):
+                 codes_to_lbls, lbls_to_colors, offset, mask_load_p: MaskLoadParams, n_pol):
         self.img_folder = img_folder
         self.mask_folder = mask_folder
         self.img_folder_polarized = img_folder_polarized
@@ -34,7 +34,7 @@ class TestCallbackPolarized(Callback):
         self.lrs = []
         self.evaluator = TestEvaluator(codes_to_lbls, offset)
         self.evaluator_polarized = TestEvaluator(codes_to_lbls, offset)
-        self.tester = TesterPolarized(self.evaluator, self.evaluator_polarized, output_path, codes_to_lbls, lbls_to_colors, mask_load_p)
+        self.tester = TesterPolarized(self.evaluator, self.evaluator_polarized, output_path, codes_to_lbls, lbls_to_colors, mask_load_p, n_pol)
 
     def on_epoch_end(self, epoch, logs=None):
         description = f'epoch {epoch + 1}'

@@ -67,7 +67,7 @@ def vis_segmentation(image: np.ndarray, mask: np.ndarray, pred: np.ndarray, offs
     err_mask = error_mask(mask, pred, offset=offset)
     err_vis = colorize_error_mask(err_mask, offset=offset)
     Image.fromarray(err_vis).save(out_folder / f'{name}_error.jpg')
-    overlay = (alpha * image + (1 - alpha) * err_vis).astype(np.uint8)
+    overlay = (alpha * image[:,:,:3] + (1 - alpha) * err_vis).astype(np.uint8)
     Image.fromarray(overlay).save(out_folder / f'{name}_overlay.jpg')
 
 

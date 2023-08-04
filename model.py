@@ -83,15 +83,7 @@ class GeoModel:
         result = combine_from_patches(pred_patches, self.patch_s, self.offset, self.patch_overlay, img.shape[:2])
         return result
     
-    def predict_image_polarized(self, img: np.ndarray, img_pol: np.ndarray):
-        # TODO: move this code to eval.py for optimization
-        if img_pol is None:
-            add_imgs = np.zeros_like(img)
-            for i in range(self.n_pol - 1):
-                add_imgs = np.concatenate((add_imgs, np.zeros_like(img)), axis=2)
-        else:
-            add_imgs = img_pol
-        img = np.concatenate((img, add_imgs), axis = 2)
+    def predict_image_polarized(self, img: np.ndarray):
         patches = split_into_patches(img, self.patch_s, self.offset, self.patch_overlay) 
         init_patch_len = len(patches)
 
@@ -117,8 +109,8 @@ class GeoModel:
 
         callback_test = TestCallbackPolarized(
             test_img_folder, test_mask_folder, test_img_folder_polarized, test_mask_folder_polarized, 
-            lambda img, img_pol: self.predict_image_polarized(img, img_pol),
-            test_output, codes_to_lbls, lbls_to_colors, self.offset, mask_load_p
+            lambda img: self.predict_image_polarized(img),
+            test_output, codes_to_lbls, lbls_to_colors, self.offset, mask_load_p, self.n_pol
         )
         
         (test_output / 'models').mkdir()
@@ -163,8 +155,10 @@ data_path = '/home/d.sorokin/dev/geology/input/'
 dataset_name = 'S1_v1_and_S3_v1'
 dataset_name_base = dataset_name + '_base'
 dataset_name_pol = dataset_name + '_polarized'
-add_dataset_pol_name = 'reg_results_6'
-n_polazied = 6
+
+n_polazied = 3
+add_dataset_pol_name = 'reg_results_' + str(n_polazied)
+
 
 # missed_classes = (3, 5, 7, 9, 10, 12) # for S1_v1
 missed_classes = (5, 7) # for S3_v1
@@ -210,7 +204,8 @@ model.model.compile(
 )
 
 model.train(
-    bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
+    bg.g_balanced(), bg.g_random(), n_steps=400, epochs=50, val_steps=80,
+    # bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
     # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=5, val_steps=5,
     test_img_folder=Path(data_path + '/dataset/' + dataset_name_base + '/imgs/test/'),
     test_mask_folder=Path(data_path + '/dataset/' + dataset_name_base + '/masks/test/'),

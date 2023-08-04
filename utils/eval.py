@@ -207,7 +207,7 @@ class Tester:
 
 class TesterPolarized:
     
-    def __init__(self, evaluator, evaluator_polarized, out_path: Path, codes_to_lbls, lbls_to_colors, mask_load_p: MaskLoadParams):
+    def __init__(self, evaluator, evaluator_polarized, out_path: Path, codes_to_lbls, lbls_to_colors, mask_load_p: MaskLoadParams, n_pol):
         self.evaluator = evaluator
         self.evaluator_polarized = evaluator_polarized
         self.do_visualization = True
@@ -215,6 +215,7 @@ class TesterPolarized:
         self.lbls_to_colors = lbls_to_colors
         self.codes_to_colors = {code: lbls_to_colors[lbl] for code, lbl in codes_to_lbls.items()}
         self.mask_load_p = mask_load_p
+        self.n_pol = n_pol
 
     def _load_test_pair(self, img_path: Path, mask_path: Path):
         img = np.array(Image.open(img_path)).astype(np.float32) / 256
@@ -243,10 +244,13 @@ class TesterPolarized:
         for i in tqdm(range(n), 'testing'):
             img, mask = self._load_test_pair(img_paths[i], mask_paths[i])
             
-            img_pol = None
             # TODO: figure out how to work with polarized
+            img_pol = np.zeros_like(img)
+            for i in range(self.n_pol - 1):
+                img_pol = np.concatenate((img_pol, np.zeros_like(img)), axis=2)
+            img = np.concatenate((img, img_pol), axis = 2)
 
-            pred = predict_func(img, img_pol)
+            pred = predict_func(img)
             eval_res = self.evaluator.evaluate(pred, mask)
             eval_res_str = eval_res.to_str(description=f'{description}, image {i + 1}')
             log_detailed.write(eval_res_str + '\n')
@@ -257,10 +261,13 @@ class TesterPolarized:
         for i in tqdm(range(n_polarized), 'testing_polarized'):
             img, mask = self._load_test_pair(img_paths_polarized[i], mask_paths_polarized[i])
 
-            img_pol = None
             # TODO: figure out how to work with polarized
+            img_pol = np.zeros_like(img)
+            for i in range(self.n_pol - 1):
+                img_pol = np.concatenate((img_pol, np.zeros_like(img)), axis=2)
+            img = np.concatenate((img, img_pol), axis = 2)
 
-            pred = predict_func(img, img_pol)
+            pred = predict_func(img)
             eval_res = self.evaluator.evaluate(pred, mask)
             eval_res_polarized = self.evaluator_polarized.evaluate(pred, mask)
             eval_res_str = eval_res.to_str(description=f'{description}, image {n + i + 1}')

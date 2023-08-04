@@ -8,7 +8,8 @@ import re
 
 initial_angles = np.arange(0, 360, 15)
 
-kept_angles = np.arange(0, 180, 30)
+# kept_angles = np.arange(0, 180, 30)
+kept_angles = np.arange(0, 180, 60)
 
 
 datapath_initial = Path('/home/d.sorokin/dev/geology/input/reg_results')
