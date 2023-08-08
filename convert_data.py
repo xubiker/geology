@@ -7,9 +7,9 @@ import csv
 
 datapath_raw = Path('/home/d.sorokin/data/geology/raw/Box3-5_DS4/')
 
-datapath_lumenstone = Path('/home/d.sorokin/data/geology/LumenStone/S3_v1')
+datapath_lumenstone = Path('/home/d.sorokin/data/geology/LumenStone/S3_v2')
 
-filename_mapping_path = 'S3_v1_filename_mapping.csv'
+filename_mapping_path = 'S3_v2_filename_mapping.csv'
 imgs_path_src = 'img'
 imgs_path_dst = 'imgs'
 masks_path_src = 'masks_machine'
