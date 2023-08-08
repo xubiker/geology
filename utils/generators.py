@@ -400,6 +400,17 @@ class AutoBalancedPatchGeneratorPolarized:
         self.n_polarized = len(self.add_img_paths)
         self.mask_paths = sorted(list(mask_dir_path.iterdir()))
         assert len(self.img_paths) == len(self.mask_paths), 'number of masks is not equal to number of imgs'
+
+        # check that we did not make mistake with filenames
+        for add_img_path_idx in range(len(self.add_img_paths)):
+            img_path_idx = len(self.img_paths) - self.n_polarized + add_img_path_idx
+            add_img_path = Path(self.add_img_paths[add_img_path_idx]).stem
+            img_path = Path(self.img_paths[img_path_idx]).stem
+            assert img_path == add_img_path, \
+                    f'Additional image folder name {add_img_path} does not correspond to the image name {img_path}'
+            valid_zone_path = Path(self.valid_zones_paths[add_img_path_idx]).stem[-len(add_img_path):]
+            assert valid_zone_path == add_img_path, \
+                    f'Valid zone folder name {valid_zone_path} does not correspond to the additional image folder name {add_img_path}'
         # --- load all images, masks and prob maps ---
         self.imgs = self._load_imgs()
         self.add_imgs = self._load_add_imgs()
