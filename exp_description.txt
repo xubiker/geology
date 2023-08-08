@@ -11,4 +11,7 @@ output_pol
 exp_10 - OK for small batch and iou_tf
 exp_11 - normal batch and it, too slow
 exp_12 - twice less patch size
-exp_16 - 3 rotations, twice less iterations
+exp_16 - 3 rotations, 400 iterations, 50 epochs
+
+exp_17 - S3_v2, 3 rotations, 400 iterations, 50 epochs
+

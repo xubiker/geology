@@ -152,12 +152,12 @@ exp_path = prepare_experiment(Path('output_pol'))
 
 data_path = '/home/d.sorokin/dev/geology/input/'
 
-dataset_name = 'S1_v1_and_S3_v1'
+dataset_name = 'S1_v1_and_S3_v2'
 dataset_name_base = dataset_name + '_base'
 dataset_name_pol = dataset_name + '_polarized'
 
 n_polazied = 3
-add_dataset_pol_name = 'reg_results_' + str(n_polazied)
+add_dataset_pol_name = 'S3_v2_reg_results_' + str(n_polazied)
 
 
 # missed_classes = (3, 5, 7, 9, 10, 12) # for S1_v1
