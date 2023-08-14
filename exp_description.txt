@@ -3,7 +3,7 @@ exp_5 - initial model trained on S3_v1 with corrected missed classes
 
 exp_6 - initial model trained on S3_v1 with n_classes_sq in AutoBalancedPatchGenerator and cleared maps cache
 
-output/exp7 - S3_v2 original Sasha model
+output/exp8 - S3_v2 original Sasha model
 
 
 output_pol
@@ -15,4 +15,4 @@ exp_16 - S3_v1 3 rotations, 400 iterations, 50 epochs
 
 exp_23 - S3_v2, 3 rotations, 400 iterations, 50 epochs
 exp_24 - S3_v2, 3 rotations, 800 iterations, 50 epochs
-exp_25 - S3_v2, 6 rotations, 800 iterations, 50 epochs
+exp_27 - S3_v2, 6 rotations, 800 iterations, 50 epochs
