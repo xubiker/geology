@@ -14,6 +14,6 @@ app/node_modules/
 app/backend/models/
 data/
 data_depr/
-cache/
+cache*/
 output/
 *.code-workspace
