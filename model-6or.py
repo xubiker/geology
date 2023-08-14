@@ -156,7 +156,7 @@ dataset_name = 'S1_v1_and_S3_v2'
 dataset_name_base = dataset_name + '_base'
 dataset_name_pol = dataset_name + '_polarized'
 
-n_polazied = 3
+n_polazied = 6
 add_dataset_pol_name = 'S3_v2_reg_results_' + str(n_polazied)
 
 
