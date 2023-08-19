@@ -173,7 +173,7 @@ pg = AutoBalancedPatchGeneratorPolarized(
     Path(data_path + 'cache/maps/'),
     Path(data_path + add_dataset_pol_name + '/imgs'),
     Path(data_path + add_dataset_pol_name + '/valid_zones'),
-    patch_s, n_classes=n_classes_sq, distancing=0.5, mixin_random_every=5)
+    patch_s, n_classes=n_classes_sq, enable_add_img=True, distancing=0.5, mixin_random_every=5)
 
 # missed_classes = pg.get_missed_classes()
 print('==== missed classes:', missed_classes)

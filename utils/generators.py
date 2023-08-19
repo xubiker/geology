@@ -368,7 +368,10 @@ class SimpleBatchGenerator:
 
 class AutoBalancedPatchGeneratorPolarized:
 
-    def __init__(self, img_dir_path: Path, mask_dir_path: Path, cache_path: Path, add_img_dir_path: Path, valid_zones_dir_path: Path, patch_size: int, n_classes: int,
+    def __init__(self, img_dir_path: Path, mask_dir_path: Path, cache_path: Path, 
+                 add_img_dir_path: Path, valid_zones_dir_path: Path,
+                 patch_size: int, n_classes: int,
+                 enable_add_img: bool = True,
                  prob_downscale_factor: int = 1, prob_downscale_func='max',
                  distancing=0.5, choose_strict_minority_class=False,
                  alpha=2, beta=3, hash_length=8, mixin_random_every=0, vis_path=None, quiet=True):
@@ -383,6 +386,7 @@ class AutoBalancedPatchGeneratorPolarized:
         self.valid_zones_dir_path = valid_zones_dir_path
         self.patch_s = patch_size
         self.n_classes = n_classes
+        self.enable_add_img = enable_add_img
         self.prob_dx_factor = prob_downscale_factor
         self.prob_dx_func = prob_downscale_func
         self.distancing = distancing
@@ -610,7 +614,7 @@ class AutoBalancedPatchGeneratorPolarized:
         img = self.imgs[img_idx]
         # print(f'img_idx {img_idx}, cl {cl}')
         prob_map = self.prob_maps[img_idx][cl] 
-        if img_idx > self.n_imgs - self.n_polarized - 1:
+        if (img_idx > self.n_imgs - self.n_polarized - 1) and self.enable_add_img:
             add_img = self.add_imgs[img_idx + self.n_polarized - self.n_imgs]
             valid_zone = self.valid_zones[img_idx + self.n_polarized - self.n_imgs]
             prob_map = prob_map * valid_zone
