@@ -16,3 +16,4 @@ exp_16 - S3_v1 3 rotations, 400 iterations, 50 epochs
 exp_23 - S3_v2, 3 rotations, 400 iterations, 50 epochs - best 39
 exp_24 - S3_v2, 3 rotations, 800 iterations, 50 epochs - best 35
 exp_27 - S3_v2, 6 rotations, 800 iterations, 50 epochs - best 30
+exp_28 - S3_v2, 3 rotations, 800 iterations, 50 epochs, NO POL - best ?
