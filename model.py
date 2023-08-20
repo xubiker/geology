@@ -187,9 +187,8 @@ model.model.compile(
 
 model.train(
     # bg.g_balanced(), bg.g_random(), n_steps=400, epochs=50, val_steps=80,
-    # bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
+    bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
     # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=5, val_steps=5,
-    bg.g_balanced(), bg.g_random(), n_steps=2, epochs=5, val_steps=5,
     test_img_folder=Path(data_path + '/dataset/' + dataset_name_base + '/imgs/test/'),
     test_mask_folder=Path(data_path + '/dataset/' + dataset_name_base + '/masks/test/'),
     test_img_folder_polarized=Path(data_path + '/dataset/' + dataset_name_pol + '/imgs/test/'),
