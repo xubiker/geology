@@ -2,7 +2,8 @@ from pathlib import Path
 import re
 import numpy as np
 
-metrics_path = Path('output/exp_8/metrics.txt')
+# metrics_path = Path('output/exp_8/metrics.txt')
+metrics_path = Path('output_pol/exp_27/metrics.txt')
 
 metrics_criteria = 'mean iou:'
 # metrics_criteria = 'mean iou (strict):'
