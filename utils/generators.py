@@ -659,7 +659,7 @@ class AutoBalancedPatchGeneratorPolarized:
         # result_imgs = img
         y = np.random.randint(img.shape[0] - self.patch_s)
         x = np.random.randint(img.shape[1] - self.patch_s)
-        patch_img = result_imgs[y : y + self.patch_s, x : x + self.patch_s]
+        # patch_img = result_imgs[y : y + self.patch_s, x : x + self.patch_s]
         patch_img = result_imgs[y : y + self.patch_s, x : x + self.patch_s, :]
         patch_mask = mask[y : y + self.patch_s, x : x + self.patch_s]
         if update_accumulators:
