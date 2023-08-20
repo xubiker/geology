@@ -66,24 +66,6 @@ class GeoModel:
         self.model.load_weights(model_path)
 
     def predict_image(self, img: np.ndarray):
-        patches = split_into_patches(img, self.patch_s, self.offset, self.patch_overlay)
-        init_patch_len = len(patches)
-
-        while (len(patches) % self.batch_s != 0):
-            patches.append(patches[-1])
-        pred_patches = []
-
-        for i in range(0, len(patches), self.batch_s):
-            batch = np.stack(patches[i : i+self.batch_s])
-            prediction = self.model.predict_on_batch(batch)
-            for x in prediction:
-                pred_patches.append(x)
-        
-        pred_patches = pred_patches[:init_patch_len]
-        result = combine_from_patches(pred_patches, self.patch_s, self.offset, self.patch_overlay, img.shape[:2])
-        return result
-    
-    def predict_image_polarized(self, img: np.ndarray):
         patches = split_into_patches(img, self.patch_s, self.offset, self.patch_overlay) 
         init_patch_len = len(patches)
 
@@ -100,6 +82,7 @@ class GeoModel:
         pred_patches = pred_patches[:init_patch_len]
         result = combine_from_patches(pred_patches, self.patch_s, self.offset, self.patch_overlay, img.shape[:2])
         return result
+    
 
     def train(
         self, train_gen, val_gen, n_steps, epochs, val_steps,
@@ -109,7 +92,7 @@ class GeoModel:
 
         callback_test = TestCallbackPolarized(
             test_img_folder, test_mask_folder, test_img_folder_polarized, test_mask_folder_polarized, 
-            lambda img: self.predict_image_polarized(img),
+            lambda img: self.predict_image(img),
             test_output, codes_to_lbls, lbls_to_colors, self.offset, mask_load_p, self.n_pol
         )
         
@@ -159,7 +142,6 @@ dataset_name_pol = dataset_name + '_polarized'
 n_polazied = 3
 add_dataset_pol_name = 'S3_v2_reg_results_' + str(n_polazied)
 
-
 # missed_classes = (3, 5, 7, 9, 10, 12) # for S1_v1
 missed_classes = (5, 7) # for S3_v1
 
@@ -205,8 +187,9 @@ model.model.compile(
 
 model.train(
     # bg.g_balanced(), bg.g_random(), n_steps=400, epochs=50, val_steps=80,
-    bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
+    # bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
     # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=5, val_steps=5,
+    bg.g_balanced(), bg.g_random(), n_steps=2, epochs=5, val_steps=5,
     test_img_folder=Path(data_path + '/dataset/' + dataset_name_base + '/imgs/test/'),
     test_mask_folder=Path(data_path + '/dataset/' + dataset_name_base + '/masks/test/'),
     test_img_folder_polarized=Path(data_path + '/dataset/' + dataset_name_pol + '/imgs/test/'),

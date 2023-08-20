@@ -223,12 +223,12 @@ class TesterPolarized:
         mask = prepocess_mask(mask, self.mask_load_p)
         return img, mask
 
-    def _visualize(self, img, gt, pred, folder: Path, image_idx):
+    def _visualize(self, img, gt, pred, folder: Path, img_name):
         if self.do_visualization and img is not None:
             img = (img * 255).astype(np.uint8)
             mask = np.argmax(gt, axis=-1).astype(np.uint8)
             pred = np.argmax(pred, axis=-1).astype(np.uint8)
-            img_name = f'img_{image_idx}'
+            # img_name = f'img_{image_idx}'
             vis_segmentation(img, mask, pred, self.evaluator.offset, self.codes_to_colors, folder, img_name)
 
     def test_on_set(self, imgs_folder: Path, masks_folder: Path, imgs_folder_polarized: Path, masks_folder_polarized: Path, predict_func, description: str) -> EvaluationResult:
@@ -242,39 +242,41 @@ class TesterPolarized:
         mask_paths = [masks_folder / (img_path.stem + '.png') for img_path in img_paths]
         n = len(img_paths)
         for i in tqdm(range(n), 'testing'):
+            print(f'testing img {img_paths[i]} and mask {mask_paths[i]}')
             img, mask = self._load_test_pair(img_paths[i], mask_paths[i])
             
             # TODO: figure out how to work with polarized
-            img_pol = np.zeros_like(img)
-            for i in range(self.n_pol - 1):
-                img_pol = np.concatenate((img_pol, np.zeros_like(img)), axis=2)
-            img = np.concatenate((img, img_pol), axis = 2)
+            img_pol = [np.zeros_like(img) for p in range(self.n_pol)]
+            img = np.concatenate((img, *img_pol), axis = 2)
 
             pred = predict_func(img)
             eval_res = self.evaluator.evaluate(pred, mask)
-            eval_res_str = eval_res.to_str(description=f'{description}, image {i + 1}')
+            eval_res_str = eval_res.to_str(description=f'{description}, {img_paths[i].stem}')
             log_detailed.write(eval_res_str + '\n')
-            self._visualize(img, mask, pred, out_folder, i + 1)
+
+            print(f'saving imgs to {out_folder / img_paths[i].stem}')
+            self._visualize(img, mask, pred, out_folder, img_paths[i].stem)
         img_paths_polarized = sorted(list(imgs_folder_polarized.iterdir()))
         mask_paths_polarized = [masks_folder_polarized / (img_path.stem + '.png') for img_path in img_paths_polarized]
         n_polarized = len(img_paths_polarized)
         for i in tqdm(range(n_polarized), 'testing_polarized'):
+            print(f'testing img {img_paths_polarized[i]} and mask {mask_paths_polarized[i]}')
             img, mask = self._load_test_pair(img_paths_polarized[i], mask_paths_polarized[i])
 
             # TODO: figure out how to work with polarized
-            img_pol = np.zeros_like(img)
-            for i in range(self.n_pol - 1):
-                img_pol = np.concatenate((img_pol, np.zeros_like(img)), axis=2)
-            img = np.concatenate((img, img_pol), axis = 2)
+            img_pol = [np.zeros_like(img) for p in range(self.n_pol)]
+            img = np.concatenate((img, *img_pol), axis = 2)
 
             pred = predict_func(img)
             eval_res = self.evaluator.evaluate(pred, mask)
             eval_res_polarized = self.evaluator_polarized.evaluate(pred, mask)
-            eval_res_str = eval_res.to_str(description=f'{description}, image {n + i + 1}')
-            eval_res_str_polarized = eval_res_polarized.to_str(description=f'{description}, image {i + 1}')
+            eval_res_str = eval_res.to_str(description=f'{description}, {img_paths_polarized[i].stem}')
+            eval_res_str_polarized = eval_res_polarized.to_str(description=f'{description}, {img_paths_polarized[i].stem}')
             log_detailed.write(eval_res_str + '\n')
             log_detailed_polarized.write(eval_res_str_polarized + '\n')
-            self._visualize(img, mask, pred, out_folder, n + i + 1)
+
+            print(f'saving imgs to {out_folder / img_paths_polarized[i].stem}')
+            self._visualize(img, mask, pred, out_folder, img_paths_polarized[i].stem)
         total_eval_res = self.evaluator.flush()
         total_eval_res_polarized = self.evaluator_polarized.flush()
         gc.collect()
