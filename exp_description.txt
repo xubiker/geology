@@ -6,6 +6,9 @@ exp_6 - initial model trained on S3_v1 with n_classes_sq in AutoBalancedPatchGen
 output/exp8 - S3_v2 original Sasha model
 
 
+geology-new - Dasha's original code with experiments
+
+
 output_pol
 
 exp_10 - OK for small batch and iou_tf
