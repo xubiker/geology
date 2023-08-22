@@ -1,8 +1,11 @@
 import sys
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # get rid of naughty log
+
 from pathlib import Path
 
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import Adam
@@ -34,19 +37,21 @@ def set_gpu(gpu_index):
                         
 
 def fix_seed():
-    # The below is necessary for starting Numpy generated random numbers
-    # in a well-defined initial state.
-    np.random.seed(123)
+    tf.keras.utils.set_random_seed(1)
+    tf.config.experimental.enable_op_determinism()
+    # # The below is necessary for starting Numpy generated random numbers
+    # # in a well-defined initial state.
+    # np.random.seed(123)
 
-    # The below is necessary for starting core Python generated random numbers
-    # in a well-defined state.
-    python_random.seed(123)
+    # # The below is necessary for starting core Python generated random numbers
+    # # in a well-defined state.
+    # python_random.seed(123)
 
-    # The below set_seed() will make random number generation
-    # in the TensorFlow backend have a well-defined initial state.
-    # For further details, see:
-    # https://www.tensorflow.org/api_docs/python/tf/random/set_seed
-    tf.random.set_seed(1234)
+    # # The below set_seed() will make random number generation
+    # # in the TensorFlow backend have a well-defined initial state.
+    # # For further details, see:
+    # # https://www.tensorflow.org/api_docs/python/tf/random/set_seed
+    # tf.random.set_seed(1234)
 
 
 class GeoModel:
@@ -288,7 +293,6 @@ if __name__ == "__main__":
     set_gpu(gpu_index)
 
     fix_seed()
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # get rid of naughty log
 
     assert len(sys.argv) > 2 and Path(sys.argv[2]).exists(), f'config file {sys.argv[2]} does not exist'
 

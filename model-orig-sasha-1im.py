@@ -1,5 +1,7 @@
 import sys
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # get rid of naughty log
+
 from pathlib import Path
 
 import numpy as np
@@ -20,20 +22,22 @@ from utils.patches import combine_from_patches, split_into_patches
 
 
 def fix_seed():
-    # The below is necessary for starting Numpy generated random numbers
-    # in a well-defined initial state.
-    np.random.seed(123)
+    tf.keras.utils.set_random_seed(1)
+    tf.config.experimental.enable_op_determinism()
+    # # The below is necessary for starting Numpy generated random numbers
+    # # in a well-defined initial state.
+    # np.random.seed(123)
 
-    # The below is necessary for starting core Python generated random numbers
-    # in a well-defined state.
-    python_random.seed(123)
+    # # The below is necessary for starting core Python generated random numbers
+    # # in a well-defined state.
+    # python_random.seed(123)
 
-    # The below set_seed() will make random number generation
-    # in the TensorFlow backend have a well-defined initial state.
-    # For further details, see:
-    # https://www.tensorflow.org/api_docs/python/tf/random/set_seed
-    tf.random.set_seed(1234)
-    # tf.set_random_seed(1)
+    # # The below set_seed() will make random number generation
+    # # in the TensorFlow backend have a well-defined initial state.
+    # # For further details, see:
+    # # https://www.tensorflow.org/api_docs/python/tf/random/set_seed
+    # tf.random.set_seed(1234)
+    # # tf.set_random_seed(1)
 
 
 def set_gpu(gpu_index):
@@ -141,8 +145,6 @@ assert len(sys.argv) > 1 and sys.argv[1].isnumeric()
 gpu_index = int(sys.argv[1])
 assert gpu_index >= 0
 set_gpu(gpu_index)
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # get rid of naughty log
 
 fix_seed()
 

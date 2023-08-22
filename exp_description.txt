@@ -5,7 +5,8 @@ exp_6 - initial model trained on S3_v1 with n_classes_sq in AutoBalancedPatchGen
 
 output/exp8 - S3_v2 original Sasha model
 
-exp_12, exp_13 - testing fix seed on orig model
+exp_12, exp_13 - testing fix seed on orig model - failed
+exp_14, exp_16 - testing fix seed on orig model
 
 
 geology-new - Dasha's original code with experiments
