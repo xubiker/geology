@@ -171,7 +171,7 @@ dataset_name = 'S1_v1_and_S3_v3'
 pg = AutoBalancedPatchGenerator(
     Path(data_path + 'dataset/' + dataset_name + '/imgs/train/'),
     Path(data_path + 'dataset/' + dataset_name + '/masks/train/'),
-    Path(data_path + 'cache-orig/maps/'),
+    Path(data_path + 'cache-orig-v3/maps/'),
     patch_s, n_classes=n_classes_sq, distancing=0.5, mixin_random_every=5)
 
 
