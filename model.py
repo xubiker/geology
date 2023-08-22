@@ -1,4 +1,5 @@
 import sys
+import os
 from pathlib import Path
 
 import numpy as np
@@ -287,6 +288,7 @@ if __name__ == "__main__":
     set_gpu(gpu_index)
 
     fix_seed()
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # get rid of naughty log
 
     assert len(sys.argv) > 2 and Path(sys.argv[2]).exists(), f'config file {sys.argv[2]} does not exist'
 

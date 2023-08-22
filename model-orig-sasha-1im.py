@@ -1,4 +1,5 @@
 import sys
+import os
 from pathlib import Path
 
 import numpy as np
@@ -140,6 +141,8 @@ assert len(sys.argv) > 1 and sys.argv[1].isnumeric()
 gpu_index = int(sys.argv[1])
 assert gpu_index >= 0
 set_gpu(gpu_index)
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # get rid of naughty log
 
 fix_seed()
 
