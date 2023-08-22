@@ -2,6 +2,9 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import tensorflow as tf
+import random as python_random
+
 from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from tensorflow.keras.losses import categorical_crossentropy
 from tensorflow.keras.optimizers import Adam
@@ -13,6 +16,23 @@ from utils.base import MaskLoadParams, prepare_experiment
 from utils.callbacks import TestCallback
 from utils.generators import AutoBalancedPatchGenerator, SimpleBatchGenerator
 from utils.patches import combine_from_patches, split_into_patches
+
+
+def fix_seed():
+    # The below is necessary for starting Numpy generated random numbers
+    # in a well-defined initial state.
+    np.random.seed(123)
+
+    # The below is necessary for starting core Python generated random numbers
+    # in a well-defined state.
+    python_random.seed(123)
+
+    # The below set_seed() will make random number generation
+    # in the TensorFlow backend have a well-defined initial state.
+    # For further details, see:
+    # https://www.tensorflow.org/api_docs/python/tf/random/set_seed
+    tf.random.set_seed(1234)
+    # tf.set_random_seed(1)
 
 
 def set_gpu(gpu_index):
@@ -121,6 +141,8 @@ gpu_index = int(sys.argv[1])
 assert gpu_index >= 0
 set_gpu(gpu_index)
 
+fix_seed()
+
 n_classes = len(config.class_names)
 present_classes = tuple(i for i in range(len(config.class_names)) if i not in missed_classes)
 n_classes_sq = len(present_classes)
@@ -143,13 +165,13 @@ exp_path = prepare_experiment(Path('output'))
 data_path = '/home/d.sorokin/dev/geology/input/'
 
 # dataset_name = 'S1_v2'
-dataset_name = 'S1_v1_and_S3_v1'
+dataset_name = 'S1_v1_and_S3_v3'
 
 
 pg = AutoBalancedPatchGenerator(
     Path(data_path + 'dataset/' + dataset_name + '/imgs/train/'),
     Path(data_path + 'dataset/' + dataset_name + '/masks/train/'),
-    Path(data_path + 'cache/maps/'),
+    Path(data_path + 'cache-orig/maps/'),
     patch_s, n_classes=n_classes_sq, distancing=0.5, mixin_random_every=5)
 
 
@@ -170,8 +192,8 @@ model.model.compile(
 )
 
 model.train(
-    bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
-    # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=50, val_steps=5,
+    # bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
+    bg.g_balanced(), bg.g_random(), n_steps=10, epochs=5, val_steps=5,
     test_img_folder=Path(data_path + '/dataset/' + dataset_name + '/imgs/test/'),
     test_mask_folder=Path(data_path + '/dataset/' + dataset_name + '/masks/test/'),
     test_output=exp_path, codes_to_lbls=codes_to_lbls, lbls_to_colors=config.lbls_to_colors,

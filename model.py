@@ -30,6 +30,22 @@ def set_gpu(gpu_index):
 		except RuntimeError as e:
 			print('Something went wrong!')
 			print(e)
+                        
+
+def fix_seed():
+    # The below is necessary for starting Numpy generated random numbers
+    # in a well-defined initial state.
+    np.random.seed(123)
+
+    # The below is necessary for starting core Python generated random numbers
+    # in a well-defined state.
+    python_random.seed(123)
+
+    # The below set_seed() will make random number generation
+    # in the TensorFlow backend have a well-defined initial state.
+    # For further details, see:
+    # https://www.tensorflow.org/api_docs/python/tf/random/set_seed
+    tf.random.set_seed(1234)
 
 
 class GeoModel:
@@ -269,6 +285,8 @@ if __name__ == "__main__":
     gpu_index = int(sys.argv[1])
     assert gpu_index >= 0
     set_gpu(gpu_index)
+
+    fix_seed()
 
     assert len(sys.argv) > 2 and Path(sys.argv[2]).exists(), f'config file {sys.argv[2]} does not exist'
 
