@@ -142,10 +142,11 @@ class GeoModel:
 
 
 class TrainConfig(object):
-    def __init__(self, n_steps=800, epochs=50, val_steps=80) -> None:
+    def __init__(self, n_steps=800, epochs=50, val_steps=80, num_threads=16) -> None:
         self.n_steps = n_steps
         self.epochs = epochs
         self.val_steps = val_steps
+        self.num_threads = num_threads
 
 class NetConfig(object):
     def __init__(self, patch_s = 384, batch_s = 16, n_layers = 4, n_filters = 16, LR = 0.001, patch_overlay = 0.5) -> None:
@@ -276,7 +277,7 @@ def run_experiment(exp_config : ExpConfig):
         # bg.g_balanced(), bg.g_random(), n_steps=400, epochs=50, val_steps=80,
         # bg.g_balanced(), bg.g_random(), n_steps=800, epochs=50, val_steps=80,
         # bg.g_balanced(), bg.g_random(), n_steps=10, epochs=5, val_steps=5,
-        bg.g_balanced(), bg.g_random(), n_steps=train_config.n_steps, epochs=train_config.epochs, val_steps=train_config.val_steps,
+        bg.g_balanced(train_config.num_threads), bg.g_random(train_config.num_threads), n_steps=train_config.n_steps, epochs=train_config.epochs, val_steps=train_config.val_steps,
         test_img_folder=Path(data_path + '/dataset/' + dataset_name_base + '/imgs/test/'),
         test_mask_folder=Path(data_path + '/dataset/' + dataset_name_base + '/masks/test/'),
         test_img_folder_polarized=Path(data_path + '/dataset/' + dataset_name_pol + '/imgs/test/'),

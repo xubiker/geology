@@ -12,6 +12,8 @@ from tqdm import tqdm
 from .base import MaskLoadParams, prepocess_mask
 from .vis import to_heat_map
 
+from multiprocessing.pool import ThreadPool
+import itertools
 
 class AutoBalancedPatchGenerator:
 
@@ -341,17 +343,38 @@ class SimpleBatchGenerator:
             x = np.flip(x, 1)
             y = np.flip(y, 1)
         return x, y
+    
+    def __get_patch(self, random):
+        if not random:
+            img, mask, _ = self.patch_generator.get_patch()
+        else:
+            img, mask, _ = self.patch_generator.get_patch_random(update_accumulators=False)
+        mask = prepocess_mask(mask, self.mask_load_p)
+        if self.augment:
+            img, mask = self._augment(img, mask)
+        return img, mask
+    
+    def g_parallel(self, random, num_threads):
+        x, y = [], []
+        while True:
+            pool = ThreadPool(num_threads)
+            results = pool.map(self.__get_patch, itertools.repeat(random, self.batch_s))
+            # Close the pool and wait for the work to finish
+            pool.close()
+            pool.join()
+
+            x = [el[0] for el in results]
+            y = [el[1] for el in results]
+
+            if len(x) == self.batch_s:
+                yield(np.stack(x),  np.stack(y))
+                x.clear()
+                y.clear()
 
     def g(self, random):
         x, y = [], []
         while True:
-            if not random:
-                img, mask, _ = self.patch_generator.get_patch()
-            else:
-                img, mask, _ = self.patch_generator.get_patch_random(update_accumulators=False)
-            mask = prepocess_mask(mask, self.mask_load_p)
-            if self.augment:
-                img, mask = self._augment(img, mask)
+            img, mask = self.__get_patch(random)
             x.append(img)
             y.append(mask)
             if len(x) == self.batch_s:
@@ -359,11 +382,17 @@ class SimpleBatchGenerator:
                 x.clear()
                 y.clear()
 
-    def g_random(self):
-        return self.g(True)
+    def g_random(self, num_threads = 1):
+        if num_threads == 1:
+            return self.g(True)
+        else:
+            return self.g_parallel(True, num_threads)
 
-    def g_balanced(self):
-        return self.g(False)
+    def g_balanced(self, num_threads = 1):
+        if num_threads == 1:
+            return self.g(False)
+        else:
+            return self.g_parallel(False, num_threads)
 
 
 class AutoBalancedPatchGeneratorPolarized:

@@ -16,7 +16,8 @@
     },
     "train_config": {
         "epochs": 5,
-        "n_steps": 2,
-        "val_steps": 80
+        "n_steps": 200,
+        "val_steps": 80,
+        "num_threads": 16
     }
 }
