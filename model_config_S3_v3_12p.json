@@ -5,7 +5,7 @@
     "dataset_name": "S1_v1_and_S3_v3",
     "enable_add_img": true,
     "exp_out_path": "output_pol",
-    "n_polazied": 6,
+    "n_polazied": 12,
     "net_config": {
         "LR": 0.001,
         "batch_s": 16,
