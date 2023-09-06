@@ -245,7 +245,7 @@ def run_experiment(exp_config : ExpConfig):
         Path(data_path + add_dataset_pol_name + '/valid_zones'),
         net_config.patch_s, n_classes=n_classes_sq, enable_add_img=enable_add_img, distancing=0.5, mixin_random_every=5)
 
-    # missed_classes = pg.get_missed_classes()
+    missed_classes = pg.get_missed_classes()
     print('==== missed classes:', missed_classes)
 
     # pg.benchmark()
@@ -260,7 +260,8 @@ def run_experiment(exp_config : ExpConfig):
     # loss_weights = recalc_loss_weights_2(pg.get_class_weights(remove_missed_classes=True))
 
     bg = SimpleBatchGenerator(pg, net_config.batch_s, mask_load_p, augment=True)
-
+    bg.save_test_batch('/home/d.sorokin/dev/geology/tmp/', train_config.num_threads)
+    return
 
     model = GeoModel(n_polazied, net_config.patch_s, net_config.batch_s, offset=8, n_classes=n_classes_sq, LR=net_config.LR, patch_overlay=net_config.patch_overlay, class_weights=None)
     model.initialize(net_config.n_filters, net_config.n_layers)

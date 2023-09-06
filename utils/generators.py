@@ -344,9 +344,9 @@ class SimpleBatchGenerator:
             y = np.flip(y, 1)
         return x, y
     
-    def __get_patch(self, random):
+    def __get_patch(self, random, patch_index):
         if not random:
-            img, mask, _ = self.patch_generator.get_patch()
+            img, mask, _ = self.patch_generator.get_patch(patch_index)
         else:
             img, mask, _ = self.patch_generator.get_patch_random(update_accumulators=False)
         mask = prepocess_mask(mask, self.mask_load_p)
@@ -358,7 +358,7 @@ class SimpleBatchGenerator:
         x, y = [], []
         while True:
             pool = ThreadPool(num_threads)
-            results = pool.map(self.__get_patch, itertools.repeat(random, self.batch_s))
+            results = pool.starmap(self.__get_patch, zip(itertools.repeat(random, self.batch_s), range(self.batch_s)))
             # Close the pool and wait for the work to finish
             pool.close()
             pool.join()
@@ -374,7 +374,7 @@ class SimpleBatchGenerator:
     def g(self, random):
         x, y = [], []
         while True:
-            img, mask = self.__get_patch(random)
+            img, mask = self.__get_patch(random, 0)
             x.append(img)
             y.append(mask)
             if len(x) == self.batch_s:
@@ -393,6 +393,25 @@ class SimpleBatchGenerator:
             return self.g(False)
         else:
             return self.g_parallel(False, num_threads)
+        
+    def save_test_batch(self, path, num_threads):
+        path_to_save = Path(path)
+        path_to_save.mkdir(exist_ok=True)
+        bi = 0
+        for b in self.g_balanced(num_threads):
+            for img in b[0]:
+                im = (img[:,:,:3] * 255).astype(np.uint8)
+                Image.fromarray(im).save(path_to_save / f'batch_b_{bi}.jpg')
+                bi = bi + 1
+            break
+
+        bi = 0
+        for br in self.g_random(num_threads):
+            for img in br[0]:
+                im = (img[:,:,:3] * 255).astype(np.uint8)
+                Image.fromarray(im).save(path_to_save / f'batch_r_{bi}.jpg')
+                bi = bi + 1
+            break
 
 
 class AutoBalancedPatchGeneratorPolarized:
@@ -617,13 +636,17 @@ class AutoBalancedPatchGeneratorPolarized:
                 patch_prob_maps.append(p)
         return patch_prob_maps
 
-    def get_patch(self):
-        if self.mixin_random_every > 0 and self.patch_count % self.mixin_random_every == 0:
+    def get_patch(self, patch_index = 0):
+        # patch_index is used in multithreading to the regulate balance of random and balanced patches
+        # because get_patch is called in thread pool and self.patch_count is always the same value
+        patch_index = self.patch_count + patch_index
+        if self.mixin_random_every > 0 and patch_index % self.mixin_random_every == 0:
             return self.get_patch_random()
         else:
             return self._get_patch_balanced()
 
     def _get_patch_balanced(self):
+        # print('balanced!')
         # --- choose class to generate patch ---
         t = time.perf_counter()
         if self.choose_strict_minority_class:
@@ -680,6 +703,7 @@ class AutoBalancedPatchGeneratorPolarized:
         return patch_img, patch_mask, cl
     
     def get_patch_random(self, update_accumulators=True):
+        # print('random!')
         img_idx = np.random.randint(self.n_imgs)
         img = self.imgs[img_idx]
         mask = self.masks[img_idx]

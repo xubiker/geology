@@ -13,10 +13,12 @@ kept_angles = np.arange(0, 180, 15)
 # kept_angles = np.arange(0, 180, 60)
 # kept_angles = np.arange(0, 180, 180)
 
+# dataset_name = 'S3_v3_reg_results'
+dataset_name = 'S3_test_reg_results'
 
-datapath_initial = Path('/home/d.sorokin/dev/geology/input/S3_v3_reg_results')
+datapath_initial = Path('/home/d.sorokin/dev/geology/input/' + dataset_name)
 
-datapath_reduced = Path('/home/d.sorokin/dev/geology/input/S3_v3_reg_results_' + str(len(kept_angles)))
+datapath_reduced = Path('/home/d.sorokin/dev/geology/input/' + dataset_name + '_' + str(len(kept_angles)))
 
 filename_prefix = 'moved_'
 
