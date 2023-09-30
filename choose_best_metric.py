@@ -3,7 +3,7 @@ import re
 import numpy as np
 
 # metrics_path = Path('output/exp_17/metrics.txt')
-metrics_path = Path('output_pol/exp_38/metrics.txt')
+metrics_path = Path('output_pol/exp_42/metrics.txt')
 
 metrics_criteria = 'mean iou:'
 # metrics_criteria = 'mean iou (strict):'
